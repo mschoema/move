@@ -272,6 +272,7 @@ class Move:
                 }
                 self.dockwidget.combo_database.addItem(name)
             self.onDbChanged(db_names[0])
+            self.set_execute_enabled(True)
         s.endGroup()
 
     @property
