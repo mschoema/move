@@ -200,7 +200,6 @@ class Move:
             self.onDbChanged)
         self.dockwidget.button_execute.clicked.disconnect(self.execute)
         self.dockwidget.button_refresh.clicked.disconnect(self.refresh)
-        self.dockwidget.button_clean.clicked.disconnect(self.clean)
 
         # remove this statement if dockwidget is to remain
         # for reuse if plugin is reopened
@@ -244,7 +243,6 @@ class Move:
                 self.onDbChanged)
             self.dockwidget.button_execute.clicked.connect(self.execute)
             self.dockwidget.button_refresh.clicked.connect(self.refresh)
-            self.dockwidget.button_clean.clicked.connect(self.clean)
 
             self.project_title = QgsProject.instance().title()
             self.setDatabaseComboBox()
@@ -333,7 +331,6 @@ class Move:
 
     # Drop unused materialized views
     def clean(self):
-        self.dockwidget.button_clean.setEnabled(False)
         select_sql = f"""
             select 'drop materialized view ' || relname || ';'
             from pg_class
@@ -357,7 +354,6 @@ class Move:
                 for drop_sql, in drop_sqls:
                     cur.execute(drop_sql)
                 conn.commit()
-        self.dockwidget.button_clean.setEnabled(True)
 
     def set_execute_enabled(self, enabled=True):
         self.dockwidget.button_execute.setEnabled(enabled)
@@ -365,6 +361,7 @@ class Move:
 
     # Execute current query
     def execute(self):
+        self.clean()
         self.set_execute_enabled(False)
         raw_sql = self.dockwidget.input_text.toPlainText()
         if raw_sql:
