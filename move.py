@@ -196,6 +196,11 @@ class Move:
 
         # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
+        self.dockwidget.combo_database.activated[str].disconnect(
+            self.onDbChanged)
+        self.dockwidget.button_execute.clicked.disconnect(self.execute)
+        self.dockwidget.button_refresh.clicked.disconnect(self.refresh)
+        self.dockwidget.button_clean.clicked.disconnect(self.clean)
 
         # remove this statement if dockwidget is to remain
         # for reuse if plugin is reopened
@@ -233,15 +238,16 @@ class Move:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = MoveDockWidget()
 
-            # connect to provide cleanup on closing of dockwidget
+            # connects
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
-
-            self.project_title = QgsProject.instance().title()
-            self.setDatabaseComboBox()
-            self.dockwidget.input_text.setTabChangesFocus(True)
+            self.dockwidget.combo_database.activated[str].connect(
+                self.onDbChanged)
             self.dockwidget.button_execute.clicked.connect(self.execute)
             self.dockwidget.button_refresh.clicked.connect(self.refresh)
             self.dockwidget.button_clean.clicked.connect(self.clean)
+
+            self.project_title = QgsProject.instance().title()
+            self.setDatabaseComboBox()
 
             # show the dockwidget
             # TODO: fix to allow choice of dock location
@@ -249,6 +255,7 @@ class Move:
             self.dockwidget.show()
 
     def setDatabaseComboBox(self):
+        self.dockwidget.combo_database.clear()
         s = QSettings()
         s.beginGroup("PostgreSQL/connections")
         db_names = s.childGroups()
@@ -266,8 +273,6 @@ class Move:
                     'password': s.value(f"{name}/password")
                 }
                 self.dockwidget.combo_database.addItem(name)
-            self.dockwidget.combo_database.activated[str].connect(
-                self.onDbChanged)
             self.onDbChanged(db_names[0])
         s.endGroup()
 
@@ -322,7 +327,8 @@ class Move:
             if exception is not None:
                 self.log(f"Exception: {exception}")
 
-        task = QgsTask.fromFunction('Move: Refresh Layer', run, on_finished=completed)
+        task = QgsTask.fromFunction(
+            'Move: Refresh Layer', run, on_finished=completed)
         self.tm.addTask(task)
 
     # Drop unused materialized views
