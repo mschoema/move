@@ -273,8 +273,8 @@ class MoveQuery:
             row_number() over () as id,
             {cols}, 
             geom, 
-            to_timestamp(st_m(st_startpoint(geom)))::timestamp as start_t,
-            to_timestamp(st_m(st_endpoint(geom)))::timestamp as end_t
+            to_timestamp(st_m(st_startpoint(geom))) at time zone 'gmt' as start_t,
+            to_timestamp(st_m(st_endpoint(geom))) at time zone 'gmt' as end_t
         from tracks"""
 
         return sql
@@ -320,8 +320,8 @@ class MoveQuery:
             id,
             {cols}, 
             geom, 
-            t as start_t, 
-            lead(t) over (partition by tgeom_id order by t) as end_t 
+            t at time zone 'gmt' as start_t, 
+            lead(t) over (partition by tgeom_id order by t) at time zone 'gmt' as end_t 
         from pairs"""
 
         return sql

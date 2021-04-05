@@ -439,7 +439,7 @@ class Move:
                 'SymbolType':
                 'Marker',
                 'geometryModifier':
-                'line_interpolate_point(\n  $geometry,\n  1.0 * (\n    ( epoch(@map_end_time)/1000 )\n    - m(start_point($geometry)) - 7200\n  ) / (\n    m(end_point($geometry))\n    - m(start_point($geometry))\n  )\n  * length($geometry)\n) '
+                'line_interpolate_point(\n  $geometry,\n  1.0 * (\n    ( epoch(@map_end_time)/1000 )\n    - m(start_point($geometry))\n  ) / (\n    m(end_point($geometry))\n    - m(start_point($geometry))\n  )\n  * length($geometry)\n) '
             })
             layer.renderer().symbol().changeSymbolLayer(0, pointGeneratorLayer)
             layer.triggerRepaint()
