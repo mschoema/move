@@ -402,21 +402,23 @@ class Move:
         srids = params['srids']
         geom_types = params['geom_types']
         for i in range(len(col_names)):
-            uri = QgsDataSourceUri()
-            uri.setConnection(db['host'], db['port'], db['database'],
-                              db['username'], db['password'],
-                              QgsDataSourceUri.SslDisable)
-            uri.setDataSource("public", view_name, col_names[i], "", "id")
-            uri.setSrid(str(srids[i]))
-            uri.setWkbType(QgsWkbTypes.parseType(geom_types[i]))
-            layer_name = col_names[i]
-            layer = self.iface.addVectorLayer(uri.uri(), layer_name,
-                                              "postgres")
-            if not layer or not layer.isValid():
-                self.msg("Layer failed to load!")
-            else:
-                layer.setCustomProperty('move/view_name', view_name)
-                layer.setCustomProperty('move/sql', query.raw_sql)
+            col_types = geom_types[i]
+            for col_type in col_types:
+                uri = QgsDataSourceUri()
+                uri.setConnection(db['host'], db['port'], db['database'],
+                                  db['username'], db['password'],
+                                  QgsDataSourceUri.SslDisable)
+                uri.setDataSource("public", view_name, col_names[i], "", "id")
+                uri.setSrid(str(srids[i]))
+                uri.setWkbType(QgsWkbTypes.parseType(col_type))
+                layer_name = col_names[i]
+                layer = self.iface.addVectorLayer(uri.uri(), layer_name,
+                                                  "postgres")
+                if not layer or not layer.isValid():
+                    self.msg("Layer failed to load!")
+                else:
+                    layer.setCustomProperty('move/view_name', view_name)
+                    layer.setCustomProperty('move/sql', query.raw_sql)
 
     def add_tpoint_layer(self, db, query, params):
         view_name = params['view_name']

@@ -156,11 +156,25 @@ class MoveQuery:
                 cur.execute(sql)
                 cur.execute(analyze_sql)
                 for col_name in col_names:
-                    sql = f"select st_srid({col_name}), geometrytype({col_name}) from {view_name} limit 1"
+                    sql = f"select distinct st_srid({col_name}), geometrytype({col_name}) from {view_name} where {col_name} is not null"
                     cur.execute(sql)
-                    srid, geom_type = cur.fetchone()
-                    srids.append(srid)
-                    geom_types.append(geom_type)
+                    res = cur.fetchall()
+                    col_srids = set()
+                    col_geom_types = set()
+                    for srid, geom_type in res:
+                        col_srids.add(srid)
+                        if geom_type.lower() in ['point', 'multipoint']:
+                            col_geom_types.add('multipoint')
+                        elif geom_type.lower() in ['linestring', 'multilinestring']:
+                            col_geom_types.add('multilinestring')
+                        elif geom_type.lower() in ['polygon', 'multipolygon']:
+                            col_geom_types.add('multipolygon')
+                    if len(col_srids) > 1:
+                        raise ValueError(f"Geometry column {col_name} has multiple SRIDS: {str(col_srids)}")
+                    elif len(col_geom_types) == 0:
+                        raise ValueError(f"No supported geometry types in geometry column {col_name}")
+                    srids.append(col_srids.pop())
+                    geom_types.append(col_geom_types)
                 conn.commit()
         return view_name, col_names, srids, geom_types
 

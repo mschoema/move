@@ -41,6 +41,9 @@ class MoveGeomTask(MoveTask):
         except psycopg2.Error as e:
             self.error_msg = e.diag.message_primary
             return False
+        except ValueError as e:
+            self.error_msg = str(e)
+            return False
         return True
 
 
