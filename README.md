@@ -61,6 +61,10 @@ Checking if a query is still being run can be done by looking at the running tas
 When the query execution is completed, the plugin will create the appropriate layers in QGIS.  
 This last step might freeze the QGIS window for a moment, but this should only take a few seconds.
 
+**BE CAREFUL: Writing queries that return millions of lines might crash QGIS.**  
+Use a LIMIT at the end of the query to restrict the amount of features created.
+
+
 #### PostGIS geometries
 
 PostGIS geometry columns create up to three layers depending on the geometry types present in the column:
