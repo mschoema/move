@@ -258,15 +258,51 @@ class MoveQuery:
         if self.has_with:
             sql_parts.append(self.with_sql)
         sql_parts.append(self.select_sql)
-        cols = [
+        inner_cols = [
             col for i, col in enumerate(self.columns_sql)
+            if i in self.other_cols() or i == col_id
+        ]
+        sql_parts.append(", ".join(inner_cols))
+        sql_parts.append(self.from_sql)
+        sql_parts.append(self.rest_sql)
+        if self.has_limit:
+            sql_parts.append(self.limit_sql)
+            sql_parts.append(self.value_sql)
+        inner_sql = " ".join(sql_parts)
+        cols = [
+            col for i, col in enumerate(self.column_names)
             if i in self.other_cols()
         ]
-        inner_cols = []
-        inner_cols.extend(cols)
-        inner_cols.append(
-            f"(st_dump(asgeometry({self.column_functions[col_id]}, true))).geom as geom"
+        cols = ", ".join(cols)
+        sql = f"""
+        with temp_1 as (
+            {inner_sql}
+        ), temp_2 as (
+            select
+                {cols},
+                (st_dump(asgeometry({self.column_names[col_id]}, true))).geom as geom
+            from temp_1
         )
+        select 
+            row_number() over () as id,
+            {cols}, 
+            geom, 
+            to_timestamp(st_m(st_startpoint(geom))) at time zone 'gmt' as start_t,
+            to_timestamp(st_m(st_endpoint(geom))) at time zone 'gmt' as end_t
+        from temp_2"""
+
+        return sql
+
+    def get_tgeom_select_sql(self, col_id):
+        sql_parts = []
+        if self.has_with:
+            sql_parts.append(self.with_sql)
+        sql_parts.append(self.select_sql)
+        inner_cols = ["row_number() over () as tgeom_id"]
+        inner_cols.extend([
+            col for i, col in enumerate(self.columns_sql)
+            if i in self.other_cols() or i == col_id
+        ])
         sql_parts.append(", ".join(inner_cols))
         sql_parts.append(self.from_sql)
         sql_parts.append(self.rest_sql)
@@ -282,45 +318,12 @@ class MoveQuery:
         sql = f"""
         with tracks as (
             {inner_sql}
-        )
-        select 
-            row_number() over () as id,
-            {cols}, 
-            geom, 
-            to_timestamp(st_m(st_startpoint(geom))) at time zone 'gmt' as start_t,
-            to_timestamp(st_m(st_endpoint(geom))) at time zone 'gmt' as end_t
-        from tracks"""
-
-        return sql
-
-    def get_tgeom_select_sql(self, col_id):
-        sql_parts = []
-        if self.has_with:
-            sql_parts.append(self.with_sql)
-        sql_parts.append(self.select_sql)
-        cols = [
-            col for i, col in enumerate(self.columns_sql)
-            if i in self.other_cols()
-        ]
-        inner_cols = ["row_number() over () as tgeom_id"]
-        inner_cols.extend(cols)
-        inner_cols.append(
-            f"unnest(instants({self.column_functions[col_id]})) as inst")
-        sql_parts.append(", ".join(inner_cols))
-        sql_parts.append(self.from_sql)
-        sql_parts.append(self.rest_sql)
-        if self.has_limit:
-            sql_parts.append(self.limit_sql)
-            sql_parts.append(self.value_sql)
-        inner_sql = " ".join(sql_parts)
-        cols = [
-            col for i, col in enumerate(self.column_names)
-            if i in self.other_cols()
-        ]
-        cols = ", ".join(cols)
-        sql = f"""
-        with insts as (
-            {inner_sql}
+        ), insts as (
+            select
+                tgeom_id,
+                {cols},
+                unnest(instants({self.column_names[col_id]})) as inst
+            from tracks
         ), pairs as (
             select 
                 row_number() over () as id, 
