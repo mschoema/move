@@ -274,23 +274,37 @@ class MoveQuery:
             if i in self.other_cols()
         ]
         cols = ", ".join(cols)
-        sql = f"""
-        with temp_1 as (
-            {inner_sql}
-        ), temp_2 as (
-            select
-                {cols},
-                (st_dump(asgeometry({self.column_names[col_id]}, true))).geom as geom
-            from temp_1
-        )
-        select 
-            row_number() over () as id,
-            {cols}, 
-            geom, 
-            to_timestamp(st_m(st_startpoint(geom))) at time zone 'gmt' as start_t,
-            to_timestamp(st_m(st_endpoint(geom))) at time zone 'gmt' as end_t
-        from temp_2"""
-
+        if cols:
+            sql = f"""
+            with temp_1 as (
+                {inner_sql}
+            ), temp_2 as (
+                select
+                    {cols},
+                    (st_dump(asgeometry({self.column_names[col_id]}, true))).geom as geom
+                from temp_1
+            )
+            select 
+                row_number() over () as id,
+                {cols}, 
+                geom, 
+                to_timestamp(st_m(st_startpoint(geom))) at time zone 'gmt' as start_t,
+                to_timestamp(st_m(st_endpoint(geom))) at time zone 'gmt' as end_t
+            from temp_2"""
+        else:
+            sql = f"""
+            with temp_1 as (
+                {inner_sql}
+            ), temp_2 as (
+                select (st_dump(asgeometry({self.column_names[col_id]}, true))).geom as geom
+                from temp_1
+            )
+            select 
+                row_number() over () as id,
+                geom, 
+                to_timestamp(st_m(st_startpoint(geom))) at time zone 'gmt' as start_t,
+                to_timestamp(st_m(st_endpoint(geom))) at time zone 'gmt' as end_t
+            from temp_2"""
         return sql
 
     def get_tgeom_select_sql(self, col_id):
@@ -315,32 +329,55 @@ class MoveQuery:
             if i in self.other_cols()
         ]
         cols = ", ".join(cols)
-        sql = f"""
-        with tracks as (
-            {inner_sql}
-        ), insts as (
-            select
-                tgeom_id,
-                {cols},
-                unnest(instants({self.column_names[col_id]})) as inst
-            from tracks
-        ), pairs as (
+        if cols:
+            sql = f"""
+            with tracks as (
+                {inner_sql}
+            ), insts as (
+                select
+                    tgeom_id,
+                    {cols},
+                    unnest(instants({self.column_names[col_id]})) as inst
+                from tracks
+            ), pairs as (
+                select 
+                    row_number() over () as id, 
+                    tgeom_id, 
+                    {cols}, 
+                    getTimestamp(inst) as t, 
+                    getValue(inst) as geom 
+                from insts
+            ) 
             select 
-                row_number() over () as id, 
-                tgeom_id, 
+                id,
                 {cols}, 
-                getTimestamp(inst) as t, 
-                getValue(inst) as geom 
-            from insts
-        ) 
-        select 
-            id,
-            {cols}, 
-            geom, 
-            t at time zone 'gmt' as start_t, 
-            lead(t) over (partition by tgeom_id order by t) at time zone 'gmt' as end_t 
-        from pairs"""
-
+                geom, 
+                t at time zone 'gmt' as start_t, 
+                lead(t) over (partition by tgeom_id order by t) at time zone 'gmt' as end_t 
+            from pairs"""
+        else:
+            sql = f"""
+            with tracks as (
+                {inner_sql}
+            ), insts as (
+                select
+                    tgeom_id,
+                    unnest(instants({self.column_names[col_id]})) as inst
+                from tracks
+            ), pairs as (
+                select 
+                    row_number() over () as id, 
+                    tgeom_id, 
+                    getTimestamp(inst) as t, 
+                    getValue(inst) as geom 
+                from insts
+            ) 
+            select 
+                id,
+                geom, 
+                t at time zone 'gmt' as start_t, 
+                lead(t) over (partition by tgeom_id order by t) at time zone 'gmt' as end_t 
+            from pairs"""
         return sql
 
     def __str__(self):
