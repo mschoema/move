@@ -244,7 +244,7 @@ class Move:
             self.dockwidget.button_execute.clicked.connect(self.execute)
             self.dockwidget.button_refresh.clicked.connect(self.refresh)
 
-            self.project_title = QgsProject.instance().title()
+            self.project_title = QgsProject.instance().title().replace(" ", "_")
             self.setDatabaseComboBox()
 
             # show the dockwidget
