@@ -73,7 +73,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Refresh Layers</string>
+         <string>Refresh Layer</string>
         </property>
         <property name="autoDefault">
          <bool>true</bool>

@@ -296,16 +296,8 @@ class Move:
     # Refresh materialized views of existing layers
     def refresh(self):
         self.dockwidget.button_refresh.setEnabled(False)
-        select_sql = f"""
-            select 'refresh materialized view ' || relname || ';'
-            from pg_class
-            where relkind = 'm'
-            and relname like 'move@_{self.project_title}@_%' escape '@'
-        """
-
-        view_names = self.get_layer_view_names()
-        if view_names:
-            select_sql += f" and relname in ({view_names})"
+        layer_name = self.iface.activeLayer().customProperty('move/view_name')
+        select_sql = f"refresh materialized view {layer_name};"
 
         def run(task):
             with psycopg2.connect(
@@ -316,9 +308,6 @@ class Move:
                     password=self.db['password']) as conn:
                 with conn.cursor() as cur:
                     cur.execute(select_sql)
-                    refresh_sqls = cur.fetchall()
-                    for refresh_sql, in refresh_sqls:
-                        cur.execute(refresh_sql)
                     conn.commit()
 
         def completed(exception):
@@ -326,9 +315,12 @@ class Move:
             if exception is not None:
                 self.log(f"Exception: {exception}")
 
-        task = QgsTask.fromFunction(
-            'Move: Refresh Layer', run, on_finished=completed)
-        self.tm.addTask(task)
+        if layer_name is not None:
+            task = QgsTask.fromFunction(
+                'Move: Refresh Active Layer', run, on_finished=completed)
+            self.tm.addTask(task)
+        else:
+            self.dockwidget.button_refresh.setEnabled(True)
 
     # Drop unused materialized views
     def clean(self):
