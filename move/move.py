@@ -335,18 +335,21 @@ class Move:
         if view_names:
             select_sql += f" and relname not in ({view_names})"
 
-        with psycopg2.connect(
-                host=self.db['host'],
-                port=self.db['port'],
-                dbname=self.db['database'],
-                user=self.db['username'],
-                password=self.db['password']) as conn:
-            with conn.cursor() as cur:
-                cur.execute(select_sql)
-                drop_sqls = cur.fetchall()
-                for drop_sql, in drop_sqls:
-                    cur.execute(drop_sql)
-                conn.commit()
+        try:
+            with psycopg2.connect(
+                    host=self.db['host'],
+                    port=self.db['port'],
+                    dbname=self.db['database'],
+                    user=self.db['username'],
+                    password=self.db['password']) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(select_sql)
+                    drop_sqls = cur.fetchall()
+                    for drop_sql, in drop_sqls:
+                        cur.execute(drop_sql)
+                    conn.commit()
+        except psycopg2.Error as e:
+            pass
 
     def set_execute_enabled(self, enabled=True):
         self.dockwidget.button_execute.setEnabled(enabled)
