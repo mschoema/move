@@ -187,7 +187,7 @@ class MoveQuery:
             view_name = f"move_{project_title}_tpoint_{str(col_id)}_{self.id}"
         sql = f"create materialized view {view_name} as ({select_sql})"
         col_name = self.column_names[col_id]
-        srid_sql = f"select srid(geom) from {view_name} limit 1"
+        srid_sql = f"select st_srid(geom) from {view_name} limit 1"
         analyze_sql = f"analyze {view_name}"
         startt_idx_sql = f"create index {view_name}_startt_idx on {view_name} (start_t)"
         endt_idx_sql = f"create index {view_name}_endt_idx on {view_name} (end_t)"
