@@ -20,7 +20,7 @@ Installing the plugin is done locally using the [Plugin Builder Tool](http://g-s
 ```shell
 pbt deploy -y
 ```
- 4. In QGIS, go to Pugins->Manage and Install Plugins->Installed, and check the box next to the plugin.
+ 4. In QGIS, go to Plugins->Manage and Install Plugins->Installed, and check the box next to the plugin.
 ![Manage and Install Plugin](img/manage_and_install_plugins.png "Install Move plugin")
 
 
