@@ -281,7 +281,8 @@ class MoveQuery:
             ), temp_2 as (
                 select
                     {cols},
-                    (st_dump(asgeometry({self.column_names[col_id]}, true))).geom as geom
+                    (st_dump(asgeometry(shift({self.column_names[col_id]}, 
+                        localtime - (current_time at time zone 'utc')::time), true))).geom as geom
                 from temp_1
             )
             select 
@@ -296,7 +297,8 @@ class MoveQuery:
             with temp_1 as (
                 {inner_sql}
             ), temp_2 as (
-                select (st_dump(asgeometry({self.column_names[col_id]}, true))).geom as geom
+                select (st_dump(asgeometry(shift({self.column_names[col_id]}, 
+                        localtime - (current_time at time zone 'utc')::time), true))).geom as geom
                 from temp_1
             )
             select 
@@ -337,7 +339,8 @@ class MoveQuery:
                 select
                     tgeom_id,
                     {cols},
-                    unnest(instants({self.column_names[col_id]})) as inst
+                    unnest(instants(shift({self.column_names[col_id]}, 
+                        localtime - (current_time at time zone 'utc')::time))) as inst
                 from tracks
             ), pairs as (
                 select 
@@ -362,7 +365,8 @@ class MoveQuery:
             ), insts as (
                 select
                     tgeom_id,
-                    unnest(instants({self.column_names[col_id]})) as inst
+                    unnest(instants(shift({self.column_names[col_id]}, 
+                        localtime - (current_time at time zone 'utc')::time))) as inst
                 from tracks
             ), pairs as (
                 select 
