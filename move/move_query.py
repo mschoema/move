@@ -104,6 +104,8 @@ class MoveQuery:
                     types = list(cur.fetchone())
                 except psycopg2.Error as e:
                     self.error_msg = e.diag.message_primary
+                except TypeError:
+                    self.error_msg = "Query returned 0 tuples"
                 conn.commit()
         if types is not None:
             self.column_types = types
