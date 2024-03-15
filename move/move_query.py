@@ -123,7 +123,7 @@ class MoveQuery:
         return ids
 
     def geom_cols(self):
-        return self.get_column_ids_by_type('geometry')
+        return self.get_column_ids_by_type(['geometry', 'geography'])
 
     def temp_cols(self):
         return self.get_column_ids_by_type(
@@ -131,7 +131,7 @@ class MoveQuery:
 
     def other_cols(self):
         return self.get_column_ids_by_type(
-            ['geometry', 'tgeompoint', 'tgeogpoint', 'tgeometry'], False)
+            ['geometry', 'geography', 'tgeompoint', 'tgeogpoint', 'tgeometry'], False)
 
     def has_geom_columns(self):
         return len(self.geom_cols()) > 0
@@ -148,7 +148,7 @@ class MoveQuery:
         col_names = [self.column_names[col] for col in geom_cols]
         srids = []
         geom_types = []
-        with psycopg2.connect(
+        with psycopg.connect(
                 host=db['host'],
                 port=db['port'],
                 dbname=db['database'],
@@ -283,7 +283,7 @@ class MoveQuery:
             ), temp_2 as (
                 select
                     {cols},
-                    (st_dump(asgeometry(shift({self.column_names[col_id]}, 
+                    (st_dump(geometry(shiftTime({self.column_names[col_id]}, 
                         localtime - (current_time at time zone 'utc')::time), true))).geom as geom
                 from temp_1
             )
@@ -299,7 +299,7 @@ class MoveQuery:
             with temp_1 as (
                 {inner_sql}
             ), temp_2 as (
-                select (st_dump(asgeometry(shift({self.column_names[col_id]}, 
+                select (st_dump(geometry(shiftTime({self.column_names[col_id]}, 
                         localtime - (current_time at time zone 'utc')::time), true))).geom as geom
                 from temp_1
             )
@@ -341,7 +341,7 @@ class MoveQuery:
                 select
                     tgeom_id,
                     {cols},
-                    unnest(instants(shift({self.column_names[col_id]}, 
+                    unnest(instants(shiftTime({self.column_names[col_id]}, 
                         localtime - (current_time at time zone 'utc')::time))) as inst
                 from tracks
             ), pairs as (
@@ -367,7 +367,7 @@ class MoveQuery:
             ), insts as (
                 select
                     tgeom_id,
-                    unnest(instants(shift({self.column_names[col_id]}, 
+                    unnest(instants(shiftTime({self.column_names[col_id]}, 
                         localtime - (current_time at time zone 'utc')::time))) as inst
                 from tracks
             ), pairs as (

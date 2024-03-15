@@ -89,5 +89,5 @@ For any issues or improvement ideas, open a new git issue or send an email to ma
 
 ## License
 
-Dagger is licensed under the terms of the MIT License (see the file
+Move is licensed under the terms of the MIT License (see the file
 [LICENSE](https://github.com/mschoema/move/blob/master/LICENSE)).

@@ -393,7 +393,10 @@ class Move:
                 self.tm.addTask(task)
 
     def raise_error(self, msg):
-        self.log("Error: " + msg)
+        if msg:
+            self.log("Error: " + msg)
+        else:
+            self.log("Unknown error")
 
     def add_geom_layers(self, db, query, params):
         view_name = params['view_name']
