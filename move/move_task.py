@@ -1,4 +1,4 @@
-import psycopg2
+import psycopg
 
 from qgis.core import QgsTask
 
@@ -38,7 +38,7 @@ class MoveGeomTask(MoveTask):
                 'srids': srids,
                 'geom_types': geom_types
             }
-        except psycopg2.Error as e:
+        except psycopg.Error as e:
             self.error_msg = str(e)
             return False
         except ValueError as e:
@@ -63,7 +63,7 @@ class MoveTTask(MoveTask):
                 'view_name': view_name,
                 'srid': srid
             }
-        except psycopg2.Error as e:
+        except psycopg.Error as e:
             self.error_msg = e.diag.message_primary
             return False
         return True

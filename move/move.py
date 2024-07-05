@@ -43,7 +43,7 @@ from .resources import *
 
 # Import the code for the DockWidget
 import os.path
-import psycopg2
+import psycopg
 import uuid
 
 from .move_dockwidget import MoveDockWidget
@@ -300,7 +300,7 @@ class Move:
         select_sql = f"refresh materialized view {layer_name};"
 
         def run(task):
-            with psycopg2.connect(
+            with psycopg.connect(
                     host=self.db['host'],
                     port=self.db['port'],
                     dbname=self.db['database'],
@@ -336,7 +336,7 @@ class Move:
             select_sql += f" and relname not in ({view_names})"
 
         try:
-            with psycopg2.connect(
+            with psycopg.connect(
                     host=self.db['host'],
                     port=self.db['port'],
                     dbname=self.db['database'],
@@ -348,7 +348,7 @@ class Move:
                     for drop_sql, in drop_sqls:
                         cur.execute(drop_sql)
                     conn.commit()
-        except psycopg2.Error as e:
+        except psycopg.Error as e:
             pass
 
     def set_execute_enabled(self, enabled=True):

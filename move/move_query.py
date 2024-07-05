@@ -1,4 +1,4 @@
-import psycopg2
+import psycopg
 import uuid
 
 
@@ -92,7 +92,7 @@ class MoveQuery:
     def resolve_types(self, db):
         sql = self.get_typeof_sql()
         types = None
-        with psycopg2.connect(
+        with psycopg.connect(
                 host=db['host'],
                 port=db['port'],
                 dbname=db['database'],
@@ -102,7 +102,7 @@ class MoveQuery:
                 try:
                     cur.execute(sql)
                     types = list(cur.fetchone())
-                except psycopg2.Error as e:
+                except psycopg.Error as e:
                     self.error_msg = e.diag.message_primary
                 except TypeError:
                     self.error_msg = "Query returned 0 tuples"
@@ -195,7 +195,7 @@ class MoveQuery:
         endt_idx_sql = f"create index {view_name}_endt_idx on {view_name} (end_t)"
         geom_idx_sql = f"create index {view_name}_geom_idx on {view_name} using spgist (geom)"
         srid = None
-        with psycopg2.connect(
+        with psycopg.connect(
                 host=db['host'],
                 port=db['port'],
                 dbname=db['database'],
